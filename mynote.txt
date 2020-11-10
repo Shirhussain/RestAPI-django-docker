@@ -1,0 +1,77 @@
+for using docker first of all you need to create a Dockerfile in your root directory "Dockerfile"
+the file need to be in Captal D and dosn't have any extention at the end.
+
+The first line of you docker file is an image that you gonna inherate your docker from.
+with docker you can build images on top of other images.
+
+FROM ---> the image taht you wnna get it 
+MAINTAINER --> it's not necessary but you can put you name or comapnay name 
+
+ENV PYTHONUNBUFFERED 1  --> what it's dose ? it's tell python that run in unbuffered mode which is recommendated 
+    when run python with docker container. the reason is that it all python to buffer the output and print it directly 
+    and this avoid some complecation.
+
+COPY ./requirements.txt /requirements.txt ---> what it's dose ? it's copy the ./requirements.txt or or file
+    in to the docker image /requirements.txt
+
+
+
+RUN mkdir /app  ---> it will create a "app" folder in our docker image 
+WORKDIR /app  ---> then it switches to our "app" as a default directory. it means that any application we run when
+    we using our dodcker it will start from here.
+COPY ./app /app ---> then it will copy the aplication from our "./app" forlder in local machine to the image 
+
+RUN adduser -D user  ---> add user that runing application only so not for havaing home directory ---> it is because of 
+    some security puposes. if you don't do this then the image run our application in the root account which is not 
+    recommendate, that means if somebody compromise our application they can then have root access to the whole iamge.
+USER user  ---> switch to our user we just create 
+
+
+
+then you have to go and create your ./requirements.txt and put this thing inside it:
+Django>=3.1.3,<3.2.0
+djangorestframework>=3.12.2,<3.13.0
+
+Then create a folder in your project by the name of "app"
+
+then build your dokcer image:
+docker build . 
+
+
+next is "Docker compose":
+
+docker compose is a tool that allow us to run  docker images easly from our project location
+also allow us to easly manage diffrent services that make our project, which one service might be python and 
+another might be database.
+
+
+aftehr that create a file in your root directory by the name of docker-compose.yml
+
+and put the following content 
+
+version: "3"
+
+services: 
+    app: ---> which is name of our service 
+        build: 
+            context: . 
+        ports: 
+            - "8000:8000" ---> to map our port 8000 from our host to our image 
+        volumes: ---> it's for update, when we have some change in our code so by this command we can update.
+            - ./app: /app 
+        command: >   ---> command is somethign that gonna run our application.
+            sh -c "python3 manage.py runserver 0.0.0.0:8000"
+
+
+
+sudo docker-compose build
+
+
+then go ahead and run this command it means that run that app or services that you wanna run it.
+docker-compose run app sh -c "django-admin.py startproject app ."
+
+
+here is some instraction from coding for entreprenurs
+https://www.codingforentrepreneurs.com/blog/django-on-docker-a-simple-introduction
+
+
