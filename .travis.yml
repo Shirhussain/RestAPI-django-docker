@@ -1,0 +1,14 @@
+language: python 
+python:
+  - "3.7"
+
+
+services: 
+  - docker 
+
+before_script: pip install docker-compose
+
+# flake8 is good for lengthening  tool 
+scripts:
+  - docker-compose run app sh -c "python3 manage.py test && flake8" 
+  
