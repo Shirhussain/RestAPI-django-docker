@@ -76,7 +76,58 @@ https://www.codingforentrepreneurs.com/blog/django-on-docker-a-simple-introducti
 
 
 
+if we wanna add postgres instead of default database so put this data in your docker-compose file 
+
+db:
+    image: postgres:10-alpine
+    {% comment %} then setup the envionment varable  {% endcomment %}
+    environment: 
+        - POSTGRES_DB = app 
+        - POSTGRES_USER = postgres
+        - POSTGRES_PASSWORD = supersecritpassword
+
+also make sure that you have to specify environment varaible in your docker-compose  which in this 
+project i wanna do it after command 
+
+also be careful about your password and make it inside environment variable 
+
+
+next i wanna create a depend service --> which in here i wanna add my "app" to depend on "db"
+there is to reasone that i wanna do it like that:
+    1. our database gonna run before the app 
+    2. the Database gonna be avalable to the network when you use HOST_NAME=db in your app. 
+
+you can add multipal dependencies in your application if you have more.
+
+
+after that you have to add psycopg2 in your ./requirements.txt
+
+also don't forget to add RUN command like the following line in django-compose
+RUN apk --update --no-cache postgres-client --> what it dose it's use a package manager wiche come with alpine
+    which 'apk' is the name of our package manager
+    the 'update' means update before we added 
+    'no-cache' don't install any extra files. the reason is taht we gonna minimize our extrafiles.
+
+    then create a temprary dependencies requirements
+    then delete the temprary dependancies make sure that you are runing this command after pip instal /requirements.txt
+
+
+
+
+
+
 {% comment %} for testing you can do this line {% endcomment %}
 docker-compose run app sh -c "python3 manage.py test"
 
 
+
+
+Mocking:
+    mocking is when you change the behavior of dependancies of the code that you tested.
+    We use mocking to avoid any unintended side effects and also to isolate to spesific peace of code 
+    you wanna test. 
+    i.e: imagine that you wanna test a function that send an email.
+    remember that never write a test that depend on external services. because you can't granty that 
+    service will be available at the point that you gonna run the tested.
+    you can use mocking to avoide sending an actual email. 
+    it's avoid sending email just check that email function is working correctly 
