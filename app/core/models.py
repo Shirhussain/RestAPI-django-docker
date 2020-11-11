@@ -1,5 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser,\
+    BaseUserManager, PermissionsMixin
 
 
 class UserManager(BaseUserManager):
@@ -11,7 +12,8 @@ class UserManager(BaseUserManager):
         # normalize is a helper function that come with the base user managere 
         user = self.model(email = self.normalize_email(email), **extra_fields)
         user.set_password(password)
-        # useign=self._db ----> it's just required for supporting multipale databases, but in here it's not 
+        # useign=self._db ----> it's just required for supporting multipale databases, 
+        # but in here it's not 
         # not our concern but it's good practice to keep it. 
         user.save(using=self._db)
         
@@ -22,7 +24,6 @@ class UserManager(BaseUserManager):
         user.is_staff= True
         user.is_superuser = True
         user.save(using=self._db)
-        
         return user
 
 
@@ -36,6 +37,3 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
-
-
-    
