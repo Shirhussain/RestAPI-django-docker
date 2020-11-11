@@ -75,3 +75,8 @@ here is some instraction from coding for entreprenurs
 https://www.codingforentrepreneurs.com/blog/django-on-docker-a-simple-introduction
 
 
+
+{% comment %} for testing you can do this line {% endcomment %}
+docker-compose run app sh -c "python3 manage.py test"
+
+
