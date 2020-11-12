@@ -119,8 +119,10 @@ RUN apk --update --no-cache postgres-client --> what it dose it's use a package 
 {% comment %} for testing you can do this line {% endcomment %}
 docker-compose run app sh -c "python3 manage.py test"
 
-
-
+{% comment %} if you wanna delete the docker-compose command and don't repeat every time
+    so do the following command.
+{% endcomment %}
+dockker-compose run --rm app sh -c "python manage.py startapp users" 
 
 Mocking:
     mocking is when you change the behavior of dependancies of the code that you tested.
