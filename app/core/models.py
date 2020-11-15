@@ -65,3 +65,25 @@ class Ingredient(models.Model):
         return self.name
 
         
+class Recipe(models.Model):
+    """Recipe object"""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    title = models.CharField(max_length=255)
+    time_minutes = models.IntegerField()
+    price = models.DecimalField(max_digits=6, decimal_places=2)
+    # in this charfield you can a singed to be null but tis isn't recommended 
+    # because then multiple state then you need to check for link that it has a valueset 
+    # or not. if you wanna make it optional i recommended using 'blank=True' 
+    # because if you create a new object if you omits the link, then it's simply said 
+    # blank string in all cases. the benifate of this is if you wanna check if there a link set 
+    # you simply check whether the link is blank or not.
+    # if you allow this to be null filed then you also have to check if the link is 'nun blank or has a value'
+    link = models.CharField(max_length=255, blank=True)
+    ingredients = models.ManyToManyField('Ingredient')
+    tags = models.ManyToManyField('Tag')
+
+    def __str__(self):
+        return self.title
