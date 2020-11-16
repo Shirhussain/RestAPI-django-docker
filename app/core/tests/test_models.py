@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.test import TestCase
 from django.contrib.auth import  get_user_model
 
@@ -68,3 +70,20 @@ class ModelTests(TestCase):
         )
 
         self.assertEqual(str(recipe), recipe.title)
+
+    # i gonna mock the uuid function from the default uuid library that comes with python
+    # then i gonna change the value it return and gonna call our function and make sure that the 
+    # string that is created for the path matches what we expected with sample uuid.
+    @patch('uuid.uuid4')
+    def test_recipe_file_name_uuid(self, mock_uuid):
+        """Test that images is saved in the correct location"""
+        uuid = 'test-uuid'
+        # the following line means that whenever we call funcation that is triggered form 
+        # whiten our test it will change the value and overwrite the default behavior 
+        mock_uuid.return_value = uuid
+        file_path = models.recipe_image_file_path(None, 'myImage.jpg')
+        
+        expected_path = f'uploads/recipe/{uuid}.jpg'
+        self.assertEqual(file_path, expected_path)
+
+

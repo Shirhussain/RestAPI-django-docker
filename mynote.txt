@@ -133,3 +133,17 @@ Mocking:
     service will be available at the point that you gonna run the tested.
     you can use mocking to avoide sending an actual email. 
     it's avoid sending email just check that email function is working correctly 
+
+
+for installing and using 'pillow' library for image modification in django you have to isntall 
+some dependancies in 'Dockerfile'. do it in---> RUN apk add  which is = 'jpeg-dev', 'musl-dev', 'zlib', 'zlib-dev'
+
+
+RUN mkdir -p /vol/web/media ---> which is making directory for media files after installing pillow
+RUN mkdir -p /vol/web/static ---> which is making directory for static
+RUN chown -R user:user /vol/ ---> it is for ownership of /vol/ directory but amke sure that before 
+    you are going to run this command you have to add the user with RUN adduser -D user
+RUN chmod -R 755 /vol/web ---> what it means that  user can do everythign or owner can do everything 
+    the rest can read an execute from directory 
+
+after you have done your wok wo build your docker ---> docker-compose build

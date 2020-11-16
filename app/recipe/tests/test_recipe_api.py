@@ -137,42 +137,84 @@ class PrivateRecipeApiTests(TestCase):
             # by passing in a variable. 'getatt(recipe, key)--> which is like recipe.title or recipe.time_minute
             self.assertEqual(payload[key], getattr(recipe, key))
 
-        def test_create_recipe_with_tags(self):
-            """Test create a recipe with tags"""
-            tag1 = sample_tag(user=self.user, name='Dogh')
-            tag2 = sample_tag(user=self.user, name='Oil')
-            payload = {
-                'title': 'Chinaki with dogh',
-                'tags': [tag1.id, tag2.id],
-                'time_minutes': 50,
-                'price': 400.00
-            }
-            res = self.client.post(RECIPES_URL, payload)
+    def test_create_recipe_with_tags(self):
+        """Test create a recipe with tags"""
+        tag1 = sample_tag(user=self.user, name='Dogh')
+        tag2 = sample_tag(user=self.user, name='Oil')
+        payload = {
+            'title': 'Chinaki with dogh',
+            'tags': [tag1.id, tag2.id],
+            'time_minutes': 50,
+            'price': 400.00
+        }
+        res = self.client.post(RECIPES_URL, payload)
 
-            self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-            recipe = Recipe.objects.get(id=res.data['id'])
-            tags = recipe.tags.all()
-            # next we should assert that the count of tags are 2 because 2 are assigned
-            self.assertEqual(tags.count(), 2)
-            self.assertIn(tag1, tags)
-            self.assertIn(tag2, tags)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        recipe = Recipe.objects.get(id=res.data['id'])
+        tags = recipe.tags.all()
+        # next we should assert that the count of tags are 2 because 2 are assigned
+        self.assertEqual(tags.count(), 2)
+        self.assertIn(tag1, tags)
+        self.assertIn(tag2, tags)
 
-        def test_create_recipe_with_ingredients(self):
-            """Test create recipe with ingredients"""
-            ingredient1 = sample_ingredient(user=self.user, name='salt')
-            ingredient2 = sample_ingredient(user=self.user, name='rice')
-            payload = {
-                'title': 'Qaboli uzbaki',
-                'ingredients': [ingredient1.id, ingredient2.id],
-                'time_minutes': 80,
-                'price': 150.00
-            }
-            res = self.client.post(RECIPES_URL, payload)
+    def test_create_recipe_with_ingredients(self):
+        """Test create recipe with ingredients"""
+        ingredient1 = sample_ingredient(user=self.user, name='salt')
+        ingredient2 = sample_ingredient(user=self.user, name='rice')
+        payload = {
+            'title': 'Qaboli uzbaki',
+            'ingredients': [ingredient1.id, ingredient2.id],
+            'time_minutes': 80,
+            'price': 150.00
+        }
+        res = self.client.post(RECIPES_URL, payload)
 
-            self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-            recipe = Recipe.objects.get(id=res.data['id'])
-            ingredients = recipe.ingredients.all()
-            self.assertEqual(ingredients.count(), 2)
-            self.assertIn(ingredient1, ingredients)
-            self.assertIn(ingredient2, ingredients)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        recipe = Recipe.objects.get(id=res.data['id'])
+        ingredients = recipe.ingredients.all()
+        self.assertEqual(ingredients.count(), 2)
+        self.assertIn(ingredient1, ingredients)
+        self.assertIn(ingredient2, ingredients)
             
+    # there are two way when which you can update an object using API:
+        # patch: is used to update the fields that are provided in the payload
+        # those which are not provided are not going to update it.
+        # put: it will update and replace with the full object which is provide 
+        # in request. that means if you exclude any fields in they payload those 
+        # actually will be remove from object that you are updating.
+    def test_partial_update_recipe(self):
+        """Test updating a recipe with patch"""
+        recipe = sample_recipe(user=self.user)
+        recipe.tags.add(sample_tag(user=self.user))
+        new_tag = sample_tag(user=self.user, name='Kabab')
+
+        payload = {'title': 'kabab mahi ba bring', 'tags': [new_tag.id]}
+        url = detail_url(recipe.id)
+        self.client.patch(url, payload)
+
+        # as it name suggest it refresh the detail form our database.
+        recipe.refresh_from_db()
+        self.assertEqual(recipe.title, payload['title'])
+        tags = recipe.tags.all()
+        self.assertEqual(len(tags), 1)
+        self.assertIn(new_tag, tags)
+
+    def test_full_update_recipe(self):
+        """Test updating recipe with put"""
+        recipe = sample_recipe(user=self.user)
+        recipe.tags.add(sample_tag(user=self.user))
+
+        payload = {
+            'title': 'Pasta or makarni khanagi',
+            'time_minutes': 25,
+            'price': 30.00
+        }
+        url = detail_url(recipe.id)
+        self.client.put(url, payload)
+
+        recipe.refresh_from_db()
+        self.assertEqual(recipe.title, payload['title'])
+        self.assertEqual(recipe.time_minutes, payload['time_minutes'])
+        self.assertEqual(recipe.price, payload['price'])
+        tags = recipe.tags.all()
+        self.assertEqual(len(tags), 0)
