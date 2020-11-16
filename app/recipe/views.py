@@ -3,7 +3,12 @@ from rest_framework.authentication import  TokenAuthentication
 from rest_framework.permissions import  IsAuthenticated
 
 from core.models import  Tag, Ingredient, Recipe
-from . serializers import  TagSerializer, IngredientSerializer, RecipeSerializer
+from . serializers import  (
+                        TagSerializer, 
+                        IngredientSerializer, 
+                        RecipeSerializer, 
+                        RecipeDetailSerializer
+)
 
 
 # to avoid code duplication between TagVieSet and IngredientViewSet 
@@ -45,3 +50,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Return the recipe for authenticated user"""
         return self.queryset.filter(user=self.request.user)
+
+    # i gonna overwrite the serializer_class because according to Rest framework docs
+    # this is that function to call and retrieve the serializer class for 
+    # a particular request. by default there is set of action in model viewset which:
+    # one of them is 'list, the other action is retrive' in which i gonna retrieve the 
+    # detail serializer.
+
+    # also make sure that you are typing the correct bellow spalling otherwise it won't work
+    def get_serializer_class(self):
+        """Return appropriate serializer class"""
+        if self.action == "retrieve":
+            return RecipeDetailSerializer
+        
+        return self.serializer_class
+        
