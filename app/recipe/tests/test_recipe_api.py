@@ -1,3 +1,9 @@
+# tempfle allow us to generate temporary files
+import tempfile
+import os
+
+from PIL import Image
+
 from django.contrib.auth import  get_user_model
 from django.urls import  reverse
 from django.test import TestCase
@@ -11,6 +17,11 @@ from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
 
 
 RECIPES_URL = reverse('recipe:recipe-list')
+
+
+def image_upload_url(recipe_id):
+    """Return URL for recipe image upload"""
+    return reverse('recipe:recipe-upload-image', args=[recipe_id])    
 
 # for the URL it should look like this:
 # api/recipe/recipes 
@@ -218,3 +229,54 @@ class PrivateRecipeApiTests(TestCase):
         self.assertEqual(recipe.price, payload['price'])
         tags = recipe.tags.all()
         self.assertEqual(len(tags), 0)
+    
+
+class RecipeImageUploadTests(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            'sampleUser@gmail.com',
+            'somerandompass'
+        )
+        self.client.force_authenticate(self.user)
+        self.recipe = sample_recipe(user=self.user)
+
+    # after the test run we should TearDown 
+    def tearDown(self):
+        """To make sure that our filesystem is keepit clean after our test 
+        this means that removing all of test files that we create, we don't want 
+        test files building up on the system  and cloaking up every single time 
+        we run a test it will create an image, so i wanna make sure that images removed 
+        after we run a test.
+        """
+        self.recipe.image.delete()
+
+    def test_upload_image_to_recipe(self):
+        """Test upload an image to recipe"""
+        url = image_upload_url(self.recipe.id)
+        # now we gonna use a context manager with our tempfile
+        # it's create a name temporary file on the system and a random location, usually .temp
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as ntf:
+            # the reason i'm use Name temporary file is because by default it return without any name
+            # but i wanna have a name which it would be temporary file.
+            img = Image.new('RGB', (10,10)) #10px by 10px just small image to have less proccessing power
+            img.save(ntf, format='JPEG')
+            # tis seek is just the way python read files, because we have already saved so it i's blank 
+            # when we use seek it will point back to the begaining of the file
+            ntf.seek(0)
+            res = self.client.post(url, {'image': ntf}, format='multipart')
+            
+        self.recipe.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('image', res.data)
+        self.assertTrue(os.path.exists(self.recipe.image.path))
+    
+    def test_upload_image_bad_request(self):
+        """Test uploading an invalid image"""
+        url = image_upload_url(self.recipe.id)
+        res = self.client.post(url, {'image': 'someString'}, format='multipart')
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        
+        

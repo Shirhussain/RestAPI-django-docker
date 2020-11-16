@@ -1,4 +1,6 @@
-from rest_framework import  viewsets, mixins
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import  viewsets, mixins, status
 from rest_framework.authentication import  TokenAuthentication
 from rest_framework.permissions import  IsAuthenticated
 
@@ -7,7 +9,8 @@ from . serializers import  (
                         TagSerializer, 
                         IngredientSerializer, 
                         RecipeSerializer, 
-                        RecipeDetailSerializer
+                        RecipeDetailSerializer,
+                        RecipeImageSerializer
 )
 
 
@@ -62,9 +65,37 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """Return appropriate serializer class"""
         if self.action == "retrieve":
             return RecipeDetailSerializer
+        elif self.action == "upload_image":
+            return RecipeImageSerializer
         
         return self.serializer_class
         
     def perform_create(self, serializer):
         """Create a new Recipe"""
         serializer.save(user=self.request.user)
+
+    # define custom action 
+    # detail=True means that it's actually for the detail and it's for specific  recipe
+    # you are gonna only be to upload images that already exists and you will use the detail url
+    # which has the id of the recipe in the url and know that which one to upload to 
+    @action(methods=['POST'], detail=True, url_path='upload-image')
+    def upload_image(self, request, pk=None):
+        """Upload an image to recipe"""
+        recipe = self.get_object()
+        serializer = self.get_serializer(
+            recipe, 
+            data=request.data
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        
+        # if it's not valid an don't return we can do the standard way which is like follows
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
