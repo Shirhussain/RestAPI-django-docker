@@ -50,9 +50,30 @@ class RecipeViewSet(viewsets.ModelViewSet):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
+    # in python we don't have convention for (public, private) function 
+    # all we have is public but if you intended to have private so do it just by underscore (_)
+    def _params_to_ints(self, qs):
+        """Convert a list of strings to a list of integers"""
+        # our_string ='1,2,3'
+        # our_string_list = ['1','2','3','4']
+        return [int(str_id) for str_id in qs.split(',')]
+
     def get_queryset(self):
         """Return the recipe for authenticated user"""
-        return self.queryset.filter(user=self.request.user)
+        # for filtering 'tags', and 'ingredients' in recipe 
+        # i gonna start by retrieving the comma saprated string of id's for our tags and ingredint
+        # query_params() is a dictionary pram which contain all of dictionary that are provided 
+        # in the request. in 'get' if we provided 'tags' in will assigned to tags otherwise it return None
+        tags = self.request.query_params.get('tags')
+        ingredients = self.request.query_params.get('ingredients')
+        queryset = self.queryset
+        if tags:
+            tag_ids = self._params_to_ints(tags)
+            queryset = queryset.filter(tags__id__in=tag_ids)
+        if ingredients:
+            Ingredient_ids = self._params_to_ints(ingredients)
+            queryset = queryset.filter(ingredients__id__in=Ingredient_ids)
+        return queryset.filter(user=self.request.user)
 
     # i gonna overwrite the serializer_class because according to Rest framework docs
     # this is that function to call and retrieve the serializer class for 
