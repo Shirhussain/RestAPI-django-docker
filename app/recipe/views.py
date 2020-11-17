@@ -25,7 +25,30 @@ class BaseRecipeAttrViewSet(viewsets.GenericViewSet,
     
     def get_queryset(self):
         """Return objects for the current authenticated user only"""
-        return self.queryset.filter(user=self.request.user).order_by('-name')
+        # next we are gonna add a feature to our API so we can filter tags and ingredients 
+        # that are assigned to recipe only, we might wanna use this filter if we creating 
+        # a front-end application that has drop-down list that we can user to filter 
+        # recipe by tags and ingredients, in that dropdown you might only want to see the 
+        # list of tags and ingredients that are actually assigned to recipe already 
+        # and you might want to exclude any tags and ingredients that are not assigned to 
+        # any recipe 
+        assigned_only = bool(
+            # the reason that i have passed as integer first 'int' because the assigned value 
+            # gonna be '0 or 1' and with they query_prams there is no consept of type 
+            # so wee need to first convert to an ingeger and then convert to a boolean
+            # otherwise if you do boolean with string with '0' in it then that convert to true
+            # which means that assigned only will be True if we pass assigned_only =0  
+
+            # if assigned_only isn't passed at all it means None, so you have to pass a default value = 0
+            int(self.request.query_params.get('assigned_only', 0))
+        )
+        queryset = self.queryset
+        if assigned_only:
+            queryset = queryset.filter(recipe__isnull=False)
+
+        return queryset.filter(
+            user=self.request.user
+        ).order_by('-name').distinct()
     
     def perform_create(self, serializer):
         """Create a new object"""
